@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edu Flow - Student Dashboard</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/logo.svg" alt="Logo">
+            <h2>Edu Flow</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#/dashboard" class="nav-item active">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg> My Dashboard
+            </a>
+            <a href="#/courses" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72l5 2.73 5-2.73v3.72z"/></svg> Enrolled Courses
+            </a>
+            <a href="#/assignments" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg> Assignments
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
+                <div class="breadcrumb" id="breadcrumb">Student / Dashboard</div>
+            </div>
+            <div class="header-right">
+                <button class="icon-btn" onclick="document.documentElement.classList.toggle('dark')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <div class="user-profile" id="logout-btn">
+                    <div class="avatar">S</div>
+                    <div class="user-info">
+                        <span class="user-name">Student</span>
+                        <span class="user-role">Student</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-container" id="page-content"></div>
+    </main>
+
+    <script src="js/mock-data.js"></script>
+    <script type="module">
+        import { checkAuth, initAuthUI } from './js/auth.js';
+        import { initRouter } from './js/router.js';
+        import { getStatusBadge, getProgressBar } from './js/utils.js';
+
+        const user = checkAuth();
+        if (user && user.role !== 'Student') window.location.href = 'dashboard.html';
+        initAuthUI();
+
+        const data = window.EduFlowData;
+        const studentId = user.userId;
+
+        const renderDashboard = (container) => {
+            const student = data.students.find(s => s.id === studentId);
+            if(!student) {
+                container.innerHTML = `<div class="empty-state">Student data not found.</div>`;
+                return;
+            }
+
+            const myEnrollments = data.enrollments.filter(e => e.studentId === studentId);
+            const myQuizResults = data.quizResults.filter(q => q.studentId === studentId && q.passed);
+
+            container.innerHTML = `
+                <div class="grid-cards">
+                    <div class="card stat-card"><div class="stat-header"><span>Enrolled Courses</span></div><div class="stat-value">${myEnrollments.length}</div></div>
+                    <div class="card stat-card"><div class="stat-header"><span>Overall Progress</span></div><div class="stat-value">${student.overallProgress}%</div></div>
+                    <div class="card stat-card"><div class="stat-header"><span>Attendance</span></div><div class="stat-value">${student.attendancePct}%</div></div>
+                    <div class="card stat-card"><div class="stat-header"><span>Quizzes Passed</span></div><div class="stat-value">${myQuizResults.length}</div></div>
+                </div>
+
+                <h3 style="margin-bottom: 16px;">My Courses</h3>
+                <div class="grid-cards">
+                    ${myEnrollments.map(e => {
+                        const course = data.courses.find(c => c.id === e.courseId);
+                        const isComplete = e.progress === 100;
+                        return `
+                            <div class="card clickable-row" onclick="alert('Demo: Expanding lesson list for ${course?.title}')">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                    <h4>${course ? course.title : 'Unknown'}</h4>
+                                    ${isComplete ? '<span class="badge badge-success">Certificate Earned</span>' : ''}
+                                </div>
+                                <div style="margin: 16px 0;">${getProgressBar(e.progress)}</div>
+                                <div>${getStatusBadge(e.status)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="grid-2-cols" style="margin-top: 24px;">
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Upcoming Deadlines</h3></div>
+                        <div>
+                            ${data.submissions.filter(sub => sub.studentId === studentId && (sub.status === 'Pending' || sub.status === 'Late'))
+                                .map(sub => {
+                                    const a = data.assignments.find(x => x.id === sub.assignmentId);
+                                    if(!a) return '';
+                                    return `
+                                        <div style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
+                                            <div><strong>${a.title}</strong><br><small class="text-muted">Due: ${a.dueDate}</small></div>
+                                            ${getStatusBadge(sub.status)}
+                                        </div>
+                                    `;
+                                }).slice(0, 5).join('') || '<p class="text-muted">No upcoming deadlines.</p>'}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Recent Quiz Scores</h3></div>
+                        <div>
+                            ${data.quizResults.filter(q => q.studentId === studentId).slice(0, 5).map(q => {
+                                const quiz = data.quizzes.find(x => x.id === q.quizId);
+                                return `
+                                    <div style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
+                                        <div><strong>${quiz ? quiz.title : 'Unknown Quiz'}</strong><br><small class="text-muted">${q.attemptDate}</small></div>
+                                        <div style="text-align: right;">
+                                            <strong>${q.score}%</strong><br>
+                                            ${q.passed ? '<span class="text-success" style="font-size: 0.8rem; font-weight: 600;">Passed</span>' : '<span class="text-danger" style="font-size: 0.8rem; font-weight: 600;">Failed</span>'}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('') || '<p class="text-muted">No quizzes attempted yet.</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderStudentAssignments = (container) => {
+            const mySubs = data.submissions.filter(sub => sub.studentId === studentId);
+
+            container.innerHTML = `
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header"><h3 class="card-title">My Assignments</h3></div>
+                    <div class="table-container">
+                        <table style="width: 100%;">
+                            <thead><tr><th>Assignment</th><th>Course</th><th>Due Date</th><th>Status</th><th>Score</th></tr></thead>
+                            <tbody>
+                                ${mySubs.map(sub => {
+                                    const a = data.assignments.find(x => x.id === sub.assignmentId);
+                                    const c = data.courses.find(x => x.id === a?.courseId);
+                                    return `
+                                        <tr>
+                                            <td>${a ? a.title : '-'}</td>
+                                            <td>${c ? c.title : '-'}</td>
+                                            <td>${a ? a.dueDate : '-'}</td>
+                                            <td>${getStatusBadge(sub.status)}</td>
+                                            <td>${sub.score !== null ? sub.score + '%' : '-'}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        };
+
+        const routes = {
+            '/dashboard': renderDashboard,
+            '/courses': (c) => c.innerHTML = `<div class="empty-state">Detailed courses view. Same as dashboard courses for demo.</div>`,
+            '/assignments': renderStudentAssignments
+        };
+
+        initRouter(routes, '/dashboard');
+    </script>
+</body>
+</html>
