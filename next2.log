@@ -1,0 +1,16 @@
+
+> eduflow@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.4s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1193ms (115 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 12.2s (937 modules)
+ ✓ Compiled in 1475ms (375 modules)
+ GET /login 200 in 1474ms
+[?25h

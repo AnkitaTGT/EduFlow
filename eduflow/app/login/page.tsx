@@ -74,8 +74,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-sky-100 dark:bg-sky-950">
+      {/* Emoji Background Pattern */}
+      <div className="absolute inset-0 opacity-20 dark:opacity-10 pointer-events-none text-4xl leading-[3rem] select-none break-words flex flex-wrap content-start" aria-hidden="true">
+        {Array.from({ length: 200 }).map((_, i) => (
+          <span key={i} className="inline-block p-4">
+            {['🎓', '📚', '🖍️', '🎒', '✏️', '🎨', '🍎', '🌟'][Math.floor(Math.random() * 8)]}
+          </span>
+        ))}
+      </div>
+
+      {/* Container to bring content above background */}
+      <div className="relative z-10 w-full max-w-md">
+      <Card className="w-full shadow-xl bg-background/60 backdrop-blur-md border-primary/20">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -93,23 +104,33 @@ export default function LoginPage() {
               </Alert>
             )}
             <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Email
+              </label>
               <Input
                 id="email"
                 type="email"
                 placeholder="m@example.com"
                 {...register("email")}
                 className={errors.email ? "border-risk" : ""}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "email-error" : undefined}
               />
-              {errors.email && <p className="text-sm text-risk">{errors.email.message}</p>}
+              {errors.email && <p id="email-error" className="text-sm text-risk">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Password
+              </label>
               <Input
                 id="password"
                 type="password"
                 {...register("password")}
                 className={errors.password ? "border-risk" : ""}
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? "password-error" : undefined}
               />
-              {errors.password && <p className="text-sm text-risk">{errors.password.message}</p>}
+              {errors.password && <p id="password-error" className="text-sm text-risk">{errors.password.message}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign In"}
@@ -120,6 +141,7 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">Contact admin to register</p>
         </CardFooter>
       </Card>
+      </div>
     </div>
   );
 }
