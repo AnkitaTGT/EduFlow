@@ -4,5 +4,8 @@
   "scripts": {
     "install": "cd eduflow && npm install",
     "build": "cd eduflow && npm run build"
+  },
+  "dependencies": {
+    "next": "14.2.35"
   }
 }
