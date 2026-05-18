@@ -1,0 +1,8 @@
+{
+  "name": "eduflow-root",
+  "version": "1.0.0",
+  "scripts": {
+    "install": "cd eduflow && npm install",
+    "build": "cd eduflow && npm run build"
+  }
+}
